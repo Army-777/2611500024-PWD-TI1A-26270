@@ -12,9 +12,9 @@ elemen semantik, teks, daftar, tautan, dan gambar.
 
 ## Validasi HTML
 - Berkas yang divalidasi: `index.html`
-- Galat yang ditemukan: [ - ]
-- Perbaikan yang dilakukan: [ - ]
-- Hasil validasi akhir: [✅ Document checking completed. No errors or warnings to show. ]
+- Galat yang ditemukan: Tidak ada
+- Perbaikan yang dilakukan: Tidak ada
+- Hasil validasi akhir:  Document checking completed. No errors or warnings to show.
 
 ## GitHub Pages
 URL: https://army-777.github.io/2611500024-PWD-TI1A-26270/pertemuan-02/
