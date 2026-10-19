@@ -42,7 +42,7 @@
             <h2>Tentang Saya</h2>
             <article>
                 <h3>Profil Singkat</h3>
-                <p>Saya mahasiswa Program Teknik Informatika.</p>
+                <p>Saya mahasiswa Program Teknk Informatika .</p>
                 <h3>Target Belajar</h3>
                 <ol>
                     <li>Memahami struktur HTML5.</li>
