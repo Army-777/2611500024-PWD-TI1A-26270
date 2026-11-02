@@ -106,6 +106,7 @@ switch ($programStudi) {
 			<ul id="navMenu">
 				<li><a href="#home">Beranda</a></li>
 				<li><a href="#about">Tentang</a></li>
+				<li><a href="#rencana-kegiatan">Rencana Kegiatan</a></li>
 				<li><a href="#contact">Kontak</a></li>
 			</ul>
 		</nav>
@@ -175,6 +176,37 @@ switch ($programStudi) {
 		</section>
 
 		<section id="contact">
+			<section id="rencana-kegiatan">
+    <h2>Rencana Kegiatan Mahasiswa</h2>
+
+    <form id="rencanaForm" action="index.php" method="post">
+		<div class="form-group">
+    <label for="nama_kegiatan">Nama Kegiatan</label><br>
+    <input
+        class="input-form"
+        type="text"
+        id="nama_kegiatan"
+        name="nama_kegiatan"
+        placeholder="Masukkan nama kegiatan"
+        minlength="3"
+        maxlength="100"
+        required>
+</div>
+
+<div class="form-group">
+    <label for="kategori">Kategori Kegiatan</label><br>
+    <select class="input-form" id="kategori" name="kategori" required>
+        <option value="">-- Pilih Kategori --</option>
+        <option value="Akademik">Akademik</option>
+        <option value="Organisasi">Organisasi</option>
+        <option value="Olahraga">Olahraga</option>
+        <option value="Sosial">Sosial</option>
+        <option value="Lainnya">Lainnya</option>
+    </select>
+</div>
+
+    </form>
+</section>
 			<h2>Kontak</h2>
 
 			<p>
