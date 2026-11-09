@@ -1,4 +1,4 @@
-
+```javascript
 // Navigasi responsif.
 const navToggle = document.getElementById("navToggle");
 const navMenu = document.getElementById("navMenu");
@@ -31,7 +31,10 @@ function hapusFeedback(formFeedback) {
     }
 }
 
-// VALIDASI FORM KONTAK.
+// ========================================
+// VALIDASI FORM KONTAK
+// ========================================
+
 const contactForms = document.querySelectorAll(
     'form[data-validation="contact"]'
 );
@@ -69,6 +72,7 @@ contactForms.forEach((contactForm) => {
 
         hapusFeedback(formFeedback);
 
+        // Validasi nama.
         if (nama.length < 3 || nama.length > 50) {
             tampilkanKesalahan(
                 formFeedback,
@@ -77,7 +81,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
-        // Memeriksa format email.
+        // Validasi format email.
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (!emailPattern.test(email)) {
@@ -88,6 +92,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi semester.
         if (
             semesterInput.value.trim() === "" ||
             !Number.isInteger(semester) ||
@@ -101,6 +106,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi tanggal.
         if (tanggal === "") {
             tampilkanKesalahan(
                 formFeedback,
@@ -109,6 +115,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi jenis pesan.
         if (!jenisPesan) {
             tampilkanKesalahan(
                 formFeedback,
@@ -117,6 +124,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi topik yang diminati.
         if (topikDipilih.length === 0) {
             tampilkanKesalahan(
                 formFeedback,
@@ -125,6 +133,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi program studi.
         if (prodi === "") {
             tampilkanKesalahan(
                 formFeedback,
@@ -133,6 +142,7 @@ contactForms.forEach((contactForm) => {
             return;
         }
 
+        // Validasi pesan.
         if (pesan.length === 0 || pesan.length > 300) {
             tampilkanKesalahan(
                 formFeedback,
@@ -145,16 +155,21 @@ contactForms.forEach((contactForm) => {
         contactForm.submit();
     });
 
+    // Menghapus pesan ketika form direset.
     contactForm.addEventListener("reset", () => {
         hapusFeedback(formFeedback);
     });
 
+    // Menghapus pesan ketika pengguna mengubah input.
     contactForm.addEventListener("input", () => {
         hapusFeedback(formFeedback);
     });
 });
 
-// VALIDASI FORM RENCANA KEGIATAN.
+// ========================================
+// VALIDASI FORM RENCANA KEGIATAN
+// ========================================
+
 const rencanaForm = document.getElementById("rencanaForm");
 
 if (rencanaForm) {
@@ -187,6 +202,7 @@ if (rencanaForm) {
 
         hapusFeedback(formFeedback);
 
+        // Validasi nama kegiatan.
         if (namaKegiatan.length < 3 || namaKegiatan.length > 100) {
             tampilkanKesalahan(
                 formFeedback,
@@ -195,7 +211,16 @@ if (rencanaForm) {
             return;
         }
 
-        if (kategori === "") {
+        // Validasi kategori.
+        const kategoriValid = [
+            "Akademik",
+            "Organisasi",
+            "Olahraga",
+            "Sosial",
+            "Lainnya"
+        ];
+
+        if (!kategoriValid.includes(kategori)) {
             tampilkanKesalahan(
                 formFeedback,
                 "Silakan pilih kategori kegiatan."
@@ -203,6 +228,7 @@ if (rencanaForm) {
             return;
         }
 
+        // Validasi tanggal pelaksanaan.
         if (tanggal === "") {
             tampilkanKesalahan(
                 formFeedback,
@@ -211,6 +237,7 @@ if (rencanaForm) {
             return;
         }
 
+        // Validasi lokasi.
         if (lokasi.length < 3 || lokasi.length > 150) {
             tampilkanKesalahan(
                 formFeedback,
@@ -219,6 +246,7 @@ if (rencanaForm) {
             return;
         }
 
+        // Validasi deskripsi.
         if (deskripsi.length === 0 || deskripsi.length > 500) {
             tampilkanKesalahan(
                 formFeedback,
@@ -231,11 +259,14 @@ if (rencanaForm) {
         rencanaForm.submit();
     });
 
+    // Menghapus pesan ketika form direset.
     rencanaForm.addEventListener("reset", () => {
         hapusFeedback(formFeedback);
     });
 
+    // Menghapus pesan ketika pengguna mengubah input.
     rencanaForm.addEventListener("input", () => {
         hapusFeedback(formFeedback);
     });
 }
+```
