@@ -20,6 +20,7 @@ Perubahan dan penambahan yang dilakukan:
 14. Melakukan pengujian form Rencana Kegiatan.
 15. Melakukan pengujian menu navigasi pada tampilan desktop dan mobile.
 16. Memastikan website berjalan melalui Laragon.
+17. memperbaiki semuanya sesuai intruski
 
 File yang mengalami perubahan:
 - index.php
