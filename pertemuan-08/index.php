@@ -1,8 +1,93 @@
-
 <?php
 session_start();
 
-// Memproses data Form Kontak.
+// ==========================================
+// PEMROSESAN FORM RENCANA KEGIATAN
+// ==========================================
+
+if (
+    $_SERVER["REQUEST_METHOD"] === "POST" &&
+    ($_POST["form_type"] ?? "") === "rencana"
+) {
+    // Mengambil dan membersihkan input.
+    $namaKegiatan = trim((string) ($_POST["nama_kegiatan"] ?? ""));
+    $kategori = trim((string) ($_POST["kategori"] ?? ""));
+    $tanggalKegiatan = trim((string) ($_POST["tanggal_kegiatan"] ?? ""));
+    $lokasi = trim((string) ($_POST["lokasi"] ?? ""));
+    $deskripsi = trim((string) ($_POST["deskripsi"] ?? ""));
+
+    $errors = [];
+
+    // Validasi nama kegiatan.
+    if (strlen($namaKegiatan) < 3 || strlen($namaKegiatan) > 100) {
+        $errors[] = "Nama kegiatan harus 3 sampai 100 karakter.";
+    }
+
+    // Validasi kategori kegiatan.
+    $kategoriDiizinkan = [
+        "Akademik",
+        "Organisasi",
+        "Olahraga",
+        "Sosial",
+        "Lainnya"
+    ];
+
+    if (!in_array($kategori, $kategoriDiizinkan, true)) {
+        $errors[] = "Kategori kegiatan tidak valid.";
+    }
+
+    // Validasi tanggal menggunakan checkdate().
+    $tanggalValid = false;
+
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggalKegiatan)) {
+        $bagianTanggal = explode("-", $tanggalKegiatan);
+
+        $tanggalValid = checkdate(
+            (int) $bagianTanggal[1],
+            (int) $bagianTanggal[2],
+            (int) $bagianTanggal[0]
+        );
+    }
+
+    if (!$tanggalValid) {
+        $errors[] = "Tanggal kegiatan tidak valid.";
+    }
+
+    // Validasi lokasi.
+    if (strlen($lokasi) < 3 || strlen($lokasi) > 150) {
+        $errors[] = "Lokasi harus 3 sampai 150 karakter.";
+    }
+
+    // Validasi deskripsi.
+    if ($deskripsi === "" || strlen($deskripsi) > 500) {
+        $errors[] = "Deskripsi wajib diisi dan maksimal 500 karakter.";
+    }
+
+    // Menyimpan data jika valid.
+    if (empty($errors)) {
+        $_SESSION["rencana_kegiatan"] = [
+            "nama_kegiatan" => $namaKegiatan,
+            "kategori" => $kategori,
+            "tanggal_kegiatan" => $tanggalKegiatan,
+            "lokasi" => $lokasi,
+            "deskripsi" => $deskripsi
+        ];
+
+        unset($_SESSION["rencana_error"]);
+    } else {
+        $_SESSION["rencana_error"] = $errors;
+    }
+
+    // PRG: Post / Redirect / Get.
+    header("Location: index.php#rencana-kegiatan");
+    exit;
+}
+
+
+// ==========================================
+// PEMROSESAN FORM KONTAK
+// ==========================================
+
 if (
     $_SERVER["REQUEST_METHOD"] === "POST" &&
     ($_POST["form_type"] ?? "") === "contact"
@@ -16,12 +101,12 @@ if (
     $prodi = trim((string) ($_POST["prodi"] ?? ""));
     $pesan = trim((string) ($_POST["pesan"] ?? ""));
 
-    // Checkbox dapat mengirimkan lebih dari satu nilai.
+    // Checkbox harus berbentuk array.
     if (!is_array($minat)) {
         $minat = [];
     }
 
-    // Menyimpan data formulir ke dalam session.
+    // Menyimpan data ke session.
     $_SESSION["nama"] = $nama;
     $_SESSION["email"] = $email;
     $_SESSION["semester"] = $semesterForm;
@@ -31,12 +116,16 @@ if (
     $_SESSION["prodi"] = $prodi;
     $_SESSION["pesan"] = $pesan;
 
-    // PRG: mencegah pengiriman POST berulang.
+    // PRG.
     header("Location: index.php#contact");
     exit;
 }
 
-// Data profil mahasiswa.
+
+// ==========================================
+// DATA PROFIL MAHASISWA
+// ==========================================
+
 $nim = "0344300002";
 $namaMahasiswa = "Cantika Putih";
 $programStudi = "SI";
@@ -53,6 +142,7 @@ const PROFIL_GITHUB = "satpamal";
 $batasSemester = 8;
 $sisaSemester = $batasSemester - $semester;
 $semesterValid = $semester >= 1 && $semester <= $batasSemester;
+
 $statusSemester = ($semesterValid && $statusAktif)
     ? "Sesuai rentang"
     : "Perlu diperiksa";
@@ -66,21 +156,33 @@ if ($semester < 3) {
     $keteranganSemester = "Semester akhir";
 }
 
+// Operator ternary.
 $namaProdi = ($programStudi == "SI")
     ? "Sistem Informasi"
     : (($programStudi == "TI") ? "Teknik Informatika" : "Lainnya");
 
-// Percabangan switch-case-default.
+// Switch-case-default.
 switch ($programStudi) {
     case "SI":
         $fokusProgramStudi = "Sistem informasi dan proses bisnis";
         break;
+
     case "TI":
         $fokusProgramStudi = "Komputasi dan pengembangan perangkat lunak";
         break;
+
     default:
         $fokusProgramStudi = "Belum ditentukan";
+        break;
 }
+
+// Mengambil hasil dan pesan kesalahan dari session.
+$rencanaData = $_SESSION["rencana_kegiatan"] ?? null;
+$rencanaErrors = $_SESSION["rencana_error"] ?? [];
+
+// Hapus pesan kesalahan setelah dibaca.
+unset($_SESSION["rencana_error"]);
+
 ?>
 
 <!doctype html>
@@ -94,6 +196,7 @@ switch ($programStudi) {
 </head>
 
 <body>
+
     <header>
         <div class="header-top">
             <h1>Profil Mahasiswa</h1>
@@ -119,75 +222,137 @@ switch ($programStudi) {
         </nav>
     </header>
 
+
     <main>
+
+        <!-- ==================================
+             BERANDA
+        =================================== -->
+
         <section id="home">
             <h2>Selamat Datang</h2>
+
             <p>
-                Halo, saya <strong><?php echo $namaMahasiswa; ?></strong>.
+                Halo, saya
+                <strong><?= htmlspecialchars($namaMahasiswa, ENT_QUOTES, "UTF-8") ?></strong>.
+
                 Saya sedang mempelajari mata kuliah
-                <strong><?php print NAMA_MATA_KULIAH; ?></strong>
-                pada tahun akademik <?php echo $tahunAkademik; ?>.
+                <strong><?= htmlspecialchars(NAMA_MATA_KULIAH, ENT_QUOTES, "UTF-8") ?></strong>
+                pada tahun akademik
+                <?= htmlspecialchars($tahunAkademik, ENT_QUOTES, "UTF-8") ?>.
             </p>
 
-            <img src="img/foto-profil.jpg" alt="Foto profil Nama Mahasiswa" />
+            <img
+                src="img/foto-profil.jpg"
+                alt="Foto profil mahasiswa" />
         </section>
+
+
+        <!-- ==================================
+             TENTANG SAYA
+        =================================== -->
 
         <section id="about">
             <h2>Tentang Saya</h2>
 
             <article>
                 <h3>Profil Singkat</h3>
-                <p>Program Studi: <?php echo $namaProdi . " (" . $programStudi . ")"; ?></p>
-                <p>Fokus program studi: <?php echo $fokusProgramStudi; ?></p>
-                <p>Status mahasiswa: <?php echo $statusAktif ? "Aktif" : "Tidak aktif"; ?></p>
-                <p>Semester: <?php echo $semester . " (" . $keteranganSemester . ")"; ?></p>
-                <p>Sisa semester hingga batas: <?php echo $sisaSemester; ?></p>
-                <p>Pemeriksaan rentang semester: <?php echo $statusSemester; ?></p>
-                <p>IPK: <?php echo number_format($ipk, 2, ',', '.'); ?></p>
-                <p>Catatan tambahan: <?php echo $catatanTambahan === null ? "Belum ada" : $catatanTambahan; ?></p>
+
+                <p>
+                    Program Studi:
+                    <?= htmlspecialchars($namaProdi . " (" . $programStudi . ")", ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p>
+                    Fokus program studi:
+                    <?= htmlspecialchars($fokusProgramStudi, ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p>
+                    Status mahasiswa:
+                    <?= $statusAktif ? "Aktif" : "Tidak aktif" ?>
+                </p>
+
+                <p>
+                    Semester:
+                    <?= $semester . " (" . $keteranganSemester . ")" ?>
+                </p>
+
+                <p>Sisa semester hingga batas: <?= $sisaSemester ?></p>
+
+                <p>
+                    Pemeriksaan rentang semester:
+                    <?= htmlspecialchars($statusSemester, ENT_QUOTES, "UTF-8") ?>
+                </p>
+
+                <p>IPK: <?= number_format($ipk, 2, ',', '.') ?></p>
+
+                <p>
+                    Catatan tambahan:
+                    <?= $catatanTambahan === null
+                        ? "Belum ada"
+                        : htmlspecialchars($catatanTambahan, ENT_QUOTES, "UTF-8") ?>
+                </p>
+
 
                 <h3>Target Belajar (Perulangan for)</h3>
+
                 <ol>
                     <?php
                     for ($i = 1; $i <= 5; $i++) {
                         echo "<li>Target belajar ke-" . $i . ": ";
+
                         switch ($i) {
                             case 1:
                                 echo "Memahami sintaks dasar PHP.";
                                 break;
+
                             case 2:
                                 echo "Menggunakan variabel dan konstanta.";
                                 break;
+
                             case 3:
                                 echo "Menerapkan operator dan percabangan.";
                                 break;
+
                             case 4:
                                 echo "Menggunakan perulangan for dan while.";
                                 break;
+
                             default:
                                 echo "Belum dipetakan";
                                 break;
                         }
+
                         echo "</li>";
                     }
                     ?>
                 </ol>
 
-                <h3>Semester (Perulangan while):</h3>
+
+                <h3>Semester (Perulangan while)</h3>
+
                 <ol>
                     <?php
                     $nomorSemester = 1;
+
                     while ($nomorSemester <= 3) {
                         echo "<li>Semester " . $nomorSemester . "</li>";
                         $nomorSemester++;
                     }
                     ?>
                 </ol>
+
             </article>
         </section>
 
-        <!-- FORM RENCANA KEGIATAN -->
+
+        <!-- ==================================
+             FORM RENCANA KEGIATAN
+        =================================== -->
+
         <section id="rencana-kegiatan">
+
             <h2>Rencana Kegiatan Mahasiswa</h2>
 
             <form
@@ -195,10 +360,15 @@ switch ($programStudi) {
                 action="index.php"
                 method="post">
 
-                <input type="hidden" name="form_type" value="rencana">
+                <input
+                    type="hidden"
+                    name="form_type"
+                    value="rencana">
+
 
                 <div class="form-group">
                     <label for="nama_kegiatan">Nama Kegiatan</label><br>
+
                     <input
                         class="input-form"
                         type="text"
@@ -210,20 +380,30 @@ switch ($programStudi) {
                         required>
                 </div>
 
+
                 <div class="form-group">
                     <label for="kategori">Kategori Kegiatan</label><br>
-                    <select class="input-form" id="kategori" name="kategori" required>
+
+                    <select
+                        class="input-form"
+                        id="kategori"
+                        name="kategori"
+                        required>
+
                         <option value="">-- Pilih Kategori --</option>
                         <option value="Akademik">Akademik</option>
                         <option value="Organisasi">Organisasi</option>
                         <option value="Olahraga">Olahraga</option>
                         <option value="Sosial">Sosial</option>
                         <option value="Lainnya">Lainnya</option>
+
                     </select>
                 </div>
 
+
                 <div class="form-group">
                     <label for="tanggal_kegiatan">Tanggal Pelaksanaan</label><br>
+
                     <input
                         class="input-form"
                         type="date"
@@ -232,8 +412,10 @@ switch ($programStudi) {
                         required>
                 </div>
 
+
                 <div class="form-group">
                     <label for="lokasi">Lokasi Kegiatan</label><br>
+
                     <input
                         class="input-form"
                         type="text"
@@ -245,8 +427,10 @@ switch ($programStudi) {
                         required>
                 </div>
 
+
                 <div class="form-group">
                     <label for="deskripsi">Deskripsi Kegiatan</label><br>
+
                     <textarea
                         class="input-form"
                         id="deskripsi"
@@ -256,23 +440,120 @@ switch ($programStudi) {
                         required></textarea>
                 </div>
 
+
                 <button type="submit">Kirim</button>
                 <button type="reset">Batal</button>
 
-                <p class="form-feedback" data-form-feedback aria-live="polite"></p>
+                <p
+                    class="form-feedback"
+                    data-form-feedback
+                    aria-live="polite"></p>
+
             </form>
+
+
+            <!-- Menampilkan pesan kesalahan PHP -->
+
+            <?php if (!empty($rencanaErrors)): ?>
+
+                <article class="submission-result">
+                    <h3>Terjadi Kesalahan</h3>
+
+                    <ul>
+                        <?php foreach ($rencanaErrors as $error): ?>
+                            <li>
+                                <?= htmlspecialchars($error, ENT_QUOTES, "UTF-8") ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </article>
+
+            <?php endif; ?>
+
+
+            <!-- Menampilkan kembali data Rencana Kegiatan -->
+
+            <?php if (is_array($rencanaData)): ?>
+
+                <article
+                    id="hasilRencana"
+                    class="submission-result"
+                    aria-live="polite">
+
+                    <h3>Hasil Rencana Kegiatan</h3>
+
+                    <p>
+                        <strong>Nama Kegiatan:</strong>
+                        <?= htmlspecialchars(
+                            $rencanaData["nama_kegiatan"],
+                            ENT_QUOTES,
+                            "UTF-8"
+                        ) ?>
+                    </p>
+
+                    <p>
+                        <strong>Kategori:</strong>
+                        <?= htmlspecialchars(
+                            $rencanaData["kategori"],
+                            ENT_QUOTES,
+                            "UTF-8"
+                        ) ?>
+                    </p>
+
+                    <p>
+                        <strong>Tanggal Pelaksanaan:</strong>
+                        <?= htmlspecialchars(
+                            $rencanaData["tanggal_kegiatan"],
+                            ENT_QUOTES,
+                            "UTF-8"
+                        ) ?>
+                    </p>
+
+                    <p>
+                        <strong>Lokasi:</strong>
+                        <?= htmlspecialchars(
+                            $rencanaData["lokasi"],
+                            ENT_QUOTES,
+                            "UTF-8"
+                        ) ?>
+                    </p>
+
+                    <p>
+                        <strong>Deskripsi:</strong>
+                        <?= nl2br(
+                            htmlspecialchars(
+                                $rencanaData["deskripsi"],
+                                ENT_QUOTES,
+                                "UTF-8"
+                            )
+                        ) ?>
+                    </p>
+
+                </article>
+
+            <?php endif; ?>
+
         </section>
 
-        <!-- FORM KONTAK -->
+
+        <!-- ==================================
+             FORM KONTAK
+        =================================== -->
+
         <section id="contact">
+
             <h2>Kontak</h2>
 
             <p>
                 Kunjungi
-                <a target="_blank" href="https://github.com/<?= PROFIL_GITHUB ?>">
+                <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://github.com/<?= rawurlencode(PROFIL_GITHUB) ?>">
                     profil GitHub saya
                 </a>.
             </p>
+
 
             <form
                 id="contactForm"
@@ -282,10 +563,15 @@ switch ($programStudi) {
                 method="post"
                 novalidate>
 
-                <input type="hidden" name="form_type" value="contact">
+                <input
+                    type="hidden"
+                    name="form_type"
+                    value="contact">
+
 
                 <div class="form-group">
-                    <label for="nama">Nama Lengkap</label><br />
+                    <label for="nama">Nama Lengkap</label><br>
+
                     <input
                         class="input-form"
                         type="text"
@@ -294,22 +580,26 @@ switch ($programStudi) {
                         placeholder="Masukkan nama lengkap"
                         minlength="3"
                         maxlength="50"
-                        required />
+                        required>
                 </div>
 
+
                 <div class="form-group">
-                    <label for="email">Email</label><br />
+                    <label for="email">Email</label><br>
+
                     <input
                         class="input-form"
                         type="email"
                         id="email"
                         name="email"
                         placeholder="nama@email.com"
-                        required />
+                        required>
                 </div>
 
+
                 <div class="form-group">
-                    <label for="semester">Semester</label><br />
+                    <label for="semester">Semester</label><br>
+
                     <input
                         class="input-form"
                         type="number"
@@ -317,87 +607,76 @@ switch ($programStudi) {
                         name="semester"
                         min="1"
                         max="14"
-                        required />
+                        required>
                 </div>
 
+
                 <div class="form-group">
-                    <label for="tanggal">Tanggal Kunjungan</label><br />
+                    <label for="tanggal">Tanggal Kunjungan</label><br>
+
                     <input
                         class="input-form"
                         type="date"
                         id="tanggal"
                         name="tanggal"
-                        required />
+                        required>
                 </div>
+
 
                 <div class="form-group">
                     <p>Jenis Pesan</p>
-                    <input type="radio" id="pertanyaan" name="jenis_pesan" value="pertanyaan" required />
+
+                    <input
+                        type="radio"
+                        id="pertanyaan"
+                        name="jenis_pesan"
+                        value="pertanyaan"
+                        required>
+
                     <label for="pertanyaan">Pertanyaan</label>
 
-                    <input type="radio" id="saran" name="jenis_pesan" value="saran" />
+                    <input
+                        type="radio"
+                        id="saran"
+                        name="jenis_pesan"
+                        value="saran">
+
                     <label for="saran">Saran</label>
                 </div>
 
+
                 <div class="form-group">
                     <p>Topik yang Diminati</p>
-                    <input type="checkbox" id="minat-html" name="minat[]" value="HTML" />
+
+                    <input
+                        type="checkbox"
+                        id="minat-html"
+                        name="minat[]"
+                        value="HTML">
+
                     <label for="minat-html">HTML</label>
 
-                    <input type="checkbox" id="minat-css" name="minat[]" value="CSS" />
+                    <input
+                        type="checkbox"
+                        id="minat-css"
+                        name="minat[]"
+                        value="CSS">
+
                     <label for="minat-css">CSS</label>
                 </div>
 
+
                 <div class="form-group">
-                    <label for="prodi">Program Studi</label><br />
-                    <select class="input-form" id="prodi" name="prodi" required>
+                    <label for="prodi">Program Studi</label><br>
+
+                    <select
+                        class="input-form"
+                        id="prodi"
+                        name="prodi"
+                        required>
+
                         <option value="">-- Pilih Program Studi --</option>
                         <option value="SI">Sistem Informasi</option>
                         <option value="TI">Teknik Informatika</option>
+
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="pesan">Pesan</label><br />
-                    <textarea
-                        class="input-form"
-                        id="pesan"
-                        name="pesan"
-                        maxlength="300"
-                        placeholder="Tulis pesan Anda"
-                        required></textarea>
-                </div>
-
-                <button type="submit">Kirim</button>
-                <button type="reset">Batal</button>
-
-                <p class="form-feedback" data-form-feedback aria-live="polite"></p>
-            </form>
-
-            <?php if (isset($_SESSION["nama"])): ?>
-                <article id="hasilKontak" class="submission-result" aria-live="polite">
-                    <h3>Data Formulir yang Dikirim</h3>
-
-                    <p><strong>Nama Lengkap:</strong> <?= htmlspecialchars($_SESSION["nama"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Email:</strong> <?= htmlspecialchars($_SESSION["email"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Semester:</strong> <?= htmlspecialchars($_SESSION["semester"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Tanggal Kunjungan:</strong> <?= htmlspecialchars($_SESSION["tanggal"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Jenis Pesan:</strong> <?= htmlspecialchars($_SESSION["jenis_pesan"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Topik yang Diminati:</strong>
-                        <?= htmlspecialchars(implode(", ", $_SESSION["minat"] ?? []), ENT_QUOTES, "UTF-8") ?>
-                    </p>
-                    <p><strong>Program Studi:</strong> <?= htmlspecialchars($_SESSION["prodi"] ?? "", ENT_QUOTES, "UTF-8") ?></p>
-                    <p><strong>Pesan:</strong> <?= nl2br(htmlspecialchars($_SESSION["pesan"] ?? "", ENT_QUOTES, "UTF-8")) ?></p>
-                </article>
-            <?php endif; ?>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; <?= date("Y") ?> <?php echo $namaMahasiswa; ?> [<?= $nim ?>]</p>
-    </footer>
-
-    <script src="script.js"></script>
-</body>
-
-</html>
